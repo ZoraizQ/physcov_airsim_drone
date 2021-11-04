@@ -1,0 +1,5 @@
+airsim
+msgpack-rpc-python
+opencv
+numpy
+open3d

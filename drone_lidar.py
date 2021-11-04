@@ -1,6 +1,5 @@
 # Python client example to get Lidar data from a drone
 #
-import setup_path 
 import airsim
 
 import sys
@@ -8,7 +7,13 @@ import math
 import time
 import argparse
 import pprint
-import numpy
+import numpy as np
+import open3d as o3d # added this
+
+def visualize_pointcloud(points_3d): # added this, me trying to visualize the lidar - Zoraiz
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(points_3d)
+    o3d.visualization.draw_geometries([pcd])
 
 # Makes the drone fly and get Lidar data
 class LidarTest:
@@ -43,7 +48,9 @@ class LidarTest:
         airsim.wait_key('Press any key to get Lidar readings')
         
         for i in range(1,5):
-            lidarData = self.client.getLidarData();
+            # you have to edit Documents/AirSim/settings.json as follows https://microsoft.github.io/AirSim/lidar/
+            lidarData = self.client.getLidarData(lidar_name="LidarSensor1", vehicle_name= "Drone1")
+
             if (len(lidarData.point_cloud) < 3):
                 print("\tNo points received from Lidar data")
             else:
@@ -51,13 +58,18 @@ class LidarTest:
                 print("\tReading %d: time_stamp: %d number_of_points: %d" % (i, lidarData.time_stamp, len(points)))
                 print("\t\tlidar position: %s" % (pprint.pformat(lidarData.pose.position)))
                 print("\t\tlidar orientation: %s" % (pprint.pformat(lidarData.pose.orientation)))
+                
+                # calling the func with the 3d points array ([(x,y,z)...])
+                print(points.shape)
+                visualize_pointcloud(points)
+
             time.sleep(5)
 
     def parse_lidarData(self, data):
 
         # reshape array of floats to array of [X,Y,Z]
-        points = numpy.array(data.point_cloud, dtype=numpy.dtype('f4'))
-        points = numpy.reshape(points, (int(points.shape[0]/3), 3))
+        points = np.array(data.point_cloud, dtype=np.dtype('f4'))
+        points = np.reshape(points, (int(points.shape[0]/3), 3))
        
         return points
 
