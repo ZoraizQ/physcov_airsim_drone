@@ -61,7 +61,9 @@ class LidarTest:
                 
                 # calling the func with the 3d points array ([(x,y,z)...])
                 print(points.shape)
-                visualize_pointcloud(points)
+                if i == 3:
+                    print('Visualizing pointcloud')
+                    visualize_pointcloud(points)
 
             time.sleep(5)
 

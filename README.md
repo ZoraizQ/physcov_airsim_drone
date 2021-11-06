@@ -5,6 +5,11 @@ Scaling PhysCov to 3D for drone physical coverage measurement, with real-time co
 
 ![lidar](assets/lidar.jpg)
 
+## Run AirSim on Blocks
+```
+.\Blocks\WindowsNoEditor\Blocks.exe --settings settings.json
+```
+
 
 ## Dependencies
 ```
