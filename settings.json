@@ -11,7 +11,11 @@
                 "LidarSensor1": {
                     "SensorType": 6,
                     "Enabled" : true,
-                    "DrawDebugPoints": true
+                    "NumberOfChannels": 64,
+                    "DrawDebugPoints": true,
+                    "PointsPerSecond": 100000,
+                    "VerticalFOVUpper": -90,
+                    "VerticalFOVLower": 90
                 }
             }
         }
