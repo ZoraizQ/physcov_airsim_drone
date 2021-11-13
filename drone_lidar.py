@@ -8,9 +8,9 @@ import time
 import argparse
 import pprint
 import numpy as np
-import open3d as o3d # added this
+import open3d as o3d 
 
-def visualize_pointcloud(points_3d): # added this, me trying to visualize the lidar - Zoraiz
+def visualize_pointcloud(points_3d): 
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(points_3d)
     o3d.visualization.draw_geometries([pcd])
@@ -34,7 +34,7 @@ class LidarTest:
         s = pprint.pformat(state)
         #print("state: %s" % s)
 
-        airsim.wait_key('Press any key to takeoff')
+        # airsim.wait_key('Press any key to takeoff')
         self.client.takeoffAsync().join()
 
         state = self.client.getMultirotorState()
@@ -61,9 +61,11 @@ class LidarTest:
                 
                 # calling the func with the 3d points array ([(x,y,z)...])
                 print(points.shape)
-                if i == 3:
-                    print('Visualizing pointcloud')
-                    visualize_pointcloud(points)
+                # if i == 3:
+                print('Visualizing pointcloud')
+                visualize_pointcloud(points)
+                with open('/lidar/t'+i+'.npy', 'wb') as f: # save points for all these timestamps
+                    np.save(f, points)
 
             time.sleep(5)
 
@@ -71,6 +73,8 @@ class LidarTest:
 
         # reshape array of floats to array of [X,Y,Z]
         points = np.array(data.point_cloud, dtype=np.dtype('f4'))
+        print(points[:500])
+
         points = np.reshape(points, (int(points.shape[0]/3), 3))
        
         return points
