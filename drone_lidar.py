@@ -3,6 +3,7 @@
 import airsim
 
 import sys
+import os
 import math
 import time
 import argparse
@@ -32,7 +33,7 @@ class LidarTest:
 
         state = self.client.getMultirotorState()
         s = pprint.pformat(state)
-        #print("state: %s" % s)
+        print("state: %s" % s)
 
         # airsim.wait_key('Press any key to takeoff')
         self.client.takeoffAsync().join()
@@ -40,14 +41,14 @@ class LidarTest:
         state = self.client.getMultirotorState()
         #print("state: %s" % pprint.pformat(state))
 
-        airsim.wait_key('Press any key to move vehicle to (-10, 10, -10) at 5 m/s')
-        self.client.moveToPositionAsync(-10, 10, -10, 5).join()
+        # airsim.wait_key('Press any key to move vehicle to (-10, 10, -10) at 5 m/s')
+        self.client.moveToPositionAsync(10, 50, 10, 25).join()
 
         self.client.hoverAsync().join()
 
-        airsim.wait_key('Press any key to get Lidar readings')
+        # airsim.wait_key('Press any key to get Lidar readings')
         
-        for i in range(1,5):
+        for i in range(1, 5):
             # you have to edit Documents/AirSim/settings.json as follows https://microsoft.github.io/AirSim/lidar/
             lidarData = self.client.getLidarData(lidar_name="LidarSensor1", vehicle_name= "Drone1")
 
@@ -61,10 +62,13 @@ class LidarTest:
                 
                 # calling the func with the 3d points array ([(x,y,z)...])
                 print(points.shape)
-                # if i == 3:
-                print('Visualizing pointcloud')
-                visualize_pointcloud(points)
-                with open('/lidar/t'+i+'.npy', 'wb') as f: # save points for all these timestamps
+                if i == 3:
+                    print('Visualizing pointcloud')
+                    visualize_pointcloud(points)
+                path = os.path.join(os.curdir, 'LidarOutputs', 'lidar_t'+str(i)+'.npy')
+                print(path)
+
+                with open(os.path.join(os.curdir, 'LidarOutputs', 'lidar_t'+str(i)+'.npy'), 'wb') as f: # save points for all these timestamps
                     np.save(f, points)
 
             time.sleep(5)
