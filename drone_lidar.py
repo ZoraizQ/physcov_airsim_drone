@@ -10,6 +10,7 @@ import argparse
 import pprint
 import numpy as np
 import open3d as o3d 
+from rsr import get_rsr_signature
 
 def visualize_pointcloud(points_3d): 
     pcd = o3d.geometry.PointCloud()
@@ -20,7 +21,6 @@ def visualize_pointcloud(points_3d):
 class LidarTest:
 
     def __init__(self):
-
         # connect to the AirSim simulator
         self.client = airsim.MultirotorClient()
         self.client.confirmConnection()
@@ -42,11 +42,11 @@ class LidarTest:
         #print("state: %s" % pprint.pformat(state))
 
         # airsim.wait_key('Press any key to move vehicle to (-10, 10, -10) at 5 m/s')
-        self.client.moveToPositionAsync(10, 50, 10, 25).join()
+        self.client.moveToPositionAsync(0, -40, 0, 25).join()
 
         self.client.hoverAsync().join()
 
-        # airsim.wait_key('Press any key to get Lidar readings')
+        airsim.wait_key('Press any key to get Lidar readings')
         
         for i in range(1, 5):
             # you have to edit Documents/AirSim/settings.json as follows https://microsoft.github.io/AirSim/lidar/
@@ -61,15 +61,19 @@ class LidarTest:
                 print("\t\tlidar orientation: %s" % (pprint.pformat(lidarData.pose.orientation)))
                 
                 # calling the func with the 3d points array ([(x,y,z)...])
-                print(points.shape)
-                if i == 3:
-                    print('Visualizing pointcloud')
-                    visualize_pointcloud(points)
-                path = os.path.join(os.curdir, 'LidarOutputs', 'lidar_t'+str(i)+'.npy')
-                print(path)
+                # print(points.shape)
+                print('Time',i)
+                drone_center = np.array(lidarData.pose.position)
+                rsr_signature = get_rsr_signature(points, drone_center)
+                print(rsr_signature)
+                # if i == 3:
+                #     print('Visualizing pointcloud')
+                #     visualize_pointcloud(points)
+                # path = os.path.join(os.curdir, 'LidarOutputs', 'lidar_t'+str(i)+'.npy')
+                # print(path)
 
-                with open(os.path.join(os.curdir, 'LidarOutputs', 'lidar_t'+str(i)+'.npy'), 'wb') as f: # save points for all these timestamps
-                    np.save(f, points)
+                # with open(os.path.join(os.curdir, 'LidarOutputs', 'lidar_t'+str(i)+'.npy'), 'wb') as f: # save points for all these timestamps
+                #     np.save(f, points)
 
             time.sleep(5)
 
