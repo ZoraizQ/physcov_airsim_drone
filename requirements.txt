@@ -1,4 +1,4 @@
 msgpack-rpc-python
 airsim
-cv2
+opencv-python
 open3d
