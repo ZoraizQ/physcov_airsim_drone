@@ -15,7 +15,8 @@
                     "DrawDebugPoints": true,
                     "PointsPerSecond": 100000,
                     "VerticalFOVUpper": -90,
-                    "VerticalFOVLower": 90
+                    "VerticalFOVLower": 90,
+                    "Range": 300
                 }
             }
         }
