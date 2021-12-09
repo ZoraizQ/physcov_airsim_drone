@@ -4,3 +4,13 @@ collision_avoidance
 Normal/
 Easy/
 Hard/
+AbandonedPark/
+CAS/
+assets/
+save_model/
+save_stat/
+CityEnviron/
+save_graph/
+LidarOutputs/
+__pycache__
+recordedpath.npy

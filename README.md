@@ -11,5 +11,7 @@ Scaling PhysCov to 3D for drone physical coverage measurement, with real-time co
 
 ## Dependencies
 ```
+pip install numpy
+pip install msgpack-rpc-python
 pip install -r requirements.txt
 ```
