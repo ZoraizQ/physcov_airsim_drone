@@ -13,17 +13,17 @@ import pprint
 from airsim.types import DrivetrainType, Vector3r
 import numpy as np
 from numpy.lib.function_base import angle
-import open3d as o3d
+# import open3d as o3d
 from tensorboard.compat.tensorflow_stub.tensor_shape import vector 
 from rsr import get_rsr_signature
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pickle
 
-def visualize_pointcloud(points_3d): 
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(points_3d)
-    o3d.visualization.draw_geometries([pcd])
+# def visualize_pointcloud(points_3d): 
+#     pcd = o3d.geometry.PointCloud()
+#     pcd.points = o3d.utility.Vector3dVector(points_3d)
+#     o3d.visualization.draw_geometries([pcd])
 
 
 def angle_between(v1, v2): # angle between 2 unit vector
@@ -40,18 +40,18 @@ class SurveyNavigator(threading.Thread):
         self.client.enableApiControl(True)
         self.result = None
         self.trip_time = 0
-        self.recording = True
+        self.recording = False
         self.path  = []
 
 
-        self.runThread = False #new
+        self.runThread = False
         
-        threading.Thread.__init__(self) #new
+        threading.Thread.__init__(self)
 
-    def run(self):  #new
-        print ("Starting thread") #new
+    def run(self): 
+        print ("Starting thread")
         self.get_lidar_data()
-        print ("Exiting thread") #new
+        print ("Exiting thread")
 
 
 
@@ -137,30 +137,13 @@ class SurveyNavigator(threading.Thread):
             print("moveOnPath threw exception: " + str(value))
             pass
 
-        # if self.runThread:
-        #     self.start() #new
-        #main thread tryexcept
         
-
-        # self.get_lidar_data() #thread2
 
         self.join()
-        # self.result.join()
         
-        # self.client.moveToPositionAsync(0, 0, z, self.velocity).join()
-        
-        # if z < -5:
-        #     print("descending")
-        #     self.client.moveToPositionAsync(0, 0, -5, 2).join()
-
-        # print("landing...")
-        # self.client.landAsync().join()
-
-        # print("disarming.")
-        # self.client.armDisarm(False)
 
         print('finished getting lidar readings')
-        # self.stop()
+
 
 
     def get_lidar_data(self):
@@ -175,7 +158,7 @@ class SurveyNavigator(threading.Thread):
         denom = pow(reach_range//g, x)  # big number otherwise, so for now x/10
         unique_rsr_signatures = []
         # timesteps = self.trip_time
-        timesteps = 1000
+        timesteps = 600
         collision_angle_thresh = 20 # degrees
 
         physcovs = []
@@ -255,21 +238,7 @@ class SurveyNavigator(threading.Thread):
                             unique_coll_timesteps.append(i)
                             print('UNIQUE collision')
             
-            # if not self.recording:
-            #     if p == len(self.path):
-            #         print('Ran out of path.')
-            #         break
-
-            #     nx, ny, nz = self.path[p]
-
-            #     timeout = 1.1
-            #     if collision_happened_before:
-            #         timeout = 0.05
-                
-            #     self.result = self.client.moveToPositionAsync(nx, ny, nz, self.velocity, timeout).join()
-                
-            #     if collision_happened:
-            #         p += 1 
+            
 
             if not collision_happened: # since unique collision checks already take some time
                 time.sleep(0.2)
@@ -288,10 +257,6 @@ class SurveyNavigator(threading.Thread):
         print(f'Elapsed time: {elapsed_time} s')
         print(f'Average timestep: {elapsed_time / timesteps} s')
 
-        # HIGH ALTITUDE W/O COLLISONS SURVEY
-        # LANDING AND TAKING OFF MULTIPLE TIMES
-        # LOW ALTITUDE SURVEY (FOLLOW ROAD) W/O COLLISIONS
-        # FOLLOW ROAD WITH MANY COLLISIONS
 
         ax = plt.gca()
 
@@ -315,8 +280,6 @@ class SurveyNavigator(threading.Thread):
 
         if len(unique_coll_timesteps) != 0:
             plt.clf()
-            # unique_coll_timesteps = [7, 30, 50, 90, 95]
-            # np.arange(len(unique_coll_timesteps)) = [1, 2, 3, 4, 5]
             plt.plot(unique_coll_timesteps, np.arange(1, len(unique_coll_timesteps)+1), 'r')
             plt.xlabel('timesteps')
             plt.ylabel('# unique collisions')
@@ -372,7 +335,6 @@ class SurveyNavigator(threading.Thread):
 
         airsim.wait_key('Press any key to reset to original state')
 
-        # self.client.landAsync().join()
 
         self.client.armDisarm(False)
         self.client.reset()
@@ -389,7 +351,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--size", type=float, help="size of the box to survey", default=50)
     arg_parser.add_argument("--stripewidth", type=float, help="stripe width of survey (in meters)", default=10)
     arg_parser.add_argument("--altitude", type=float, help="altitude of survey (in positive meters)", default=25)
-    arg_parser.add_argument("--speed", type=float, help="speed of survey (in meters/second)", default=5)
+    arg_parser.add_argument("--speed", type=float, help="speed of survey (in meters/second)", default=6)
     args = arg_parser.parse_args(args)
 
     nav = SurveyNavigator(args)

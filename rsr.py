@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 import mpl_toolkits.mplot3d
-import open3d as o3d
+# import open3d as o3d
 
 
 def getRoundedThresholdv1(a, Minclip):  
@@ -45,20 +45,20 @@ def get_rsr_signature(lidar_points_orig, DRONE_CENTER, NUM_PTS=40, GRANULARITY=2
     rsr_signature = np.linalg.norm(truncated_lidar_points, axis=1)
     rsr_signature = getRoundedThresholdv1(rsr_signature, GRANULARITY)
     
-    if plot_lidar:
-        d = o3d.geometry.PointCloud()
-        d.points = o3d.utility.Vector3dVector(beam_dvs)   
-        d.paint_uniform_color([1, 0, 0]) 
+    # if plot_lidar:
+    #     d = o3d.geometry.PointCloud()
+    #     d.points = o3d.utility.Vector3dVector(beam_dvs)   
+    #     d.paint_uniform_color([1, 0, 0]) 
 
-        l = o3d.geometry.PointCloud()
-        l.points = o3d.utility.Vector3dVector(lidar_points)
-        l.paint_uniform_color([0.67, 1, 0]) 
+    #     l = o3d.geometry.PointCloud()
+    #     l.points = o3d.utility.Vector3dVector(lidar_points)
+    #     l.paint_uniform_color([0.67, 1, 0]) 
 
-        tl = o3d.geometry.PointCloud()
-        tl.points = o3d.utility.Vector3dVector(truncated_lidar_points)
-        tl.paint_uniform_color([0, 0.3, 0.206]) 
+    #     tl = o3d.geometry.PointCloud()
+    #     tl.points = o3d.utility.Vector3dVector(truncated_lidar_points)
+    #     tl.paint_uniform_color([0, 0.3, 0.206]) 
 
-        o3d.visualization.draw_geometries([d, l, tl])
+    #     o3d.visualization.draw_geometries([d, l, tl])
 
     return rsr_signature
 

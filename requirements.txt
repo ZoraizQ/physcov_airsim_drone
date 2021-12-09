@@ -1,6 +1,5 @@
 airsim
 opencv-python
-open3d
 matplotlib
 tensorflow
 keras
