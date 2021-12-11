@@ -34,3 +34,5 @@ To replay the recorded path autonomously, execute Blocks.exe and run the script.
 
 ### if you get a BufferError: Existing exports of data: object cannot be re-sized on the console, reset the drone and re run drone_lidar.py
 
+
+## note on hardware requirements: AirSim runs using unreal engine and can be hardware intensive, the system requires at least 8GB of RAM and a graphics card with at least 4GB of VRAM. To obtain the best results without a dedicated GPU, please use the Blocks environment provided by airsim as this has a minimal hardware footprint.
