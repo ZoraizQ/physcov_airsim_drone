@@ -51,7 +51,7 @@ This involves replaying a recorded path (autonomous playback mode) from the last
 ## Start real-time PhysCov generation
 
 Once the installed Airsim environment binary (e.g. Blocks.exe) is running, simply execute the main script:
-```python main.py```
+```python src/physcov_airsim_drone.py```
 
 The script will initiate drone take-off using the pre-defined default parameters and on a separate thread perform RSR generation and PhysCov computations while the drone flies. After execution, plots for the runs are also saved in the same folder including plots for:
 - PhysCov over time

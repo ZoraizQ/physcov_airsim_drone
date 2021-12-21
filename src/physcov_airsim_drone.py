@@ -2,7 +2,6 @@ import airsim
 import threading
 import sys
 import os
-import math
 import time
 import argparse
 import pprint
@@ -10,14 +9,14 @@ from airsim.types import DrivetrainType, Vector3r
 import numpy as np
 from numpy.lib.function_base import angle
 from tensorboard.compat.tensorflow_stub.tensor_shape import vector 
-from rsr import get_rsr_signature
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pickle
-# import open3d as o3d
 
+from src.rsr import get_rsr_signature
 
 # def visualize_pointcloud(points_3d): 
+#     import open3d as o3d
 #     pcd = o3d.geometry.PointCloud()
 #     pcd.points = o3d.utility.Vector3dVector(points_3d)
 #     o3d.visualization.draw_geometries([pcd])
