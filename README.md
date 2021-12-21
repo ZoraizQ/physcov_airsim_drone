@@ -3,6 +3,8 @@ Thorough testing of autonomous systems for UAVs before their deployment is cruci
 
 Along with integration for real-time coverage measurements, we test various scenarios in AirSim using a quadrotor equipped with a LIDAR sensor under certain defined survey tasks. Based on our evaluation, we propose that gathering high coverage with PhysCov indicates testing of an adequate number of distinct behaviors for an autonomous flying system, uncovering potential failures such as collisions.
 
+You can read the full project report [here](/assets/Report.pdf).
+
 <img src="assets/lidar.jpg" width="50%" height="50%" />
 
 ## Dependencies
