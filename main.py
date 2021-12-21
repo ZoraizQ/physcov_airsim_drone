@@ -1,9 +1,5 @@
-# Python client example to get Lidar data from a drone
-#
 import airsim
-
 import threading
-
 import sys
 import os
 import math
@@ -13,12 +9,13 @@ import pprint
 from airsim.types import DrivetrainType, Vector3r
 import numpy as np
 from numpy.lib.function_base import angle
-# import open3d as o3d
 from tensorboard.compat.tensorflow_stub.tensor_shape import vector 
 from rsr import get_rsr_signature
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import pickle
+# import open3d as o3d
+
 
 # def visualize_pointcloud(points_3d): 
 #     pcd = o3d.geometry.PointCloud()
@@ -29,7 +26,8 @@ import pickle
 def angle_between(v1, v2): # angle between 2 unit vector
     return np.degrees(np.arccos(np.clip(np.dot(v1, v2), -1.0, 1.0)))
 
-class SurveyNavigator(threading.Thread):
+
+class PhysCovNavigator(threading.Thread):
     def __init__(self, args):
         self.boxsize = args.size
         self.stripewidth = args.stripewidth
@@ -354,7 +352,7 @@ if __name__ == "__main__":
     arg_parser.add_argument("--speed", type=float, help="speed of survey (in meters/second)", default=6)
     args = arg_parser.parse_args(args)
 
-    nav = SurveyNavigator(args)
+    nav = PhysCovNavigator(args)
     try:
         nav.execute()
     finally:
