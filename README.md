@@ -6,7 +6,7 @@ Along with integration for real-time coverage measurements, we test various scen
 <img src="assets/lidar.jpg" width="50%" height="50%" />
 
 ## Dependencies
-1. Install ![Python](https://www.python.org/downloads/). Preferably v3.8, if you would like to use Open3D for pointcloud visualization during RSR generation.
+1. Install [Python](https://www.python.org/downloads/). Preferably v3.8, if you would like to use Open3D for pointcloud visualization during RSR generation.
 2. Install the following packages: 
 ```
 pip install numpy
@@ -30,11 +30,14 @@ https://github.com/Microsoft/AirSim/releases
 You can press F1 to view more help information inside the simulation tool. 
 Please go over the instructions to use AirSim at https://microsoft.github.io/AirSim/#how-to-use-it
 
+### Hardware Requirements
+AirSim is built on Unreal Engine and can be hardware intensive ([FAQs](https://microsoft.github.io/AirSim/faq/)) - the system requires at least 4GB of RAM (8GB recommended) and an integrated/external GPU with atleast 4GB of VRAM. To obtain the best performance without a dedicated GPU, please use the Blocks environment provided by AirSim as this has a minimal hardware footprint.
+
 ## Choose a Control Mode
 Choose from the following two modes currently:
 
 ### Manual
-Manual control using an ![Xbox controller](https://microsoft.github.io/AirSim/xbox_controller/) connected to your computer. 
+Manual control using an [Xbox controller](https://microsoft.github.io/AirSim/xbox_controller/) connected to your computer. 
 
 Other alternatives including programmatic controls such as pre-defined survey paths using the AirSim Python API, or setting up configuration for a PX4 controller in AirSim which we have not tested. More instructions regarding these procedures can be found at https://microsoft.github.io/AirSim/#how-to-use-it.
 
@@ -61,8 +64,6 @@ The script will initiate drone take-off using the pre-defined default parameters
 - Max reachable range for one timepoint **(R = 6 m)** 
 - Radius of sphere for sphere-casting collision detection of RSR beams **(r = 1m)**
 
-**BufferError** If you get a BufferError such as "Existing exports of data: object cannot be re-sized on the console" - simply reset the drone using backspace and re-run the script.
+**BufferError?** - If you get a BufferError such as "Existing exports of data: object cannot be re-sized on the console" - simply reset the drone using backspace and re-run the script.
 
 
-## Hardware Requirements
-AirSim is built on Unreal Engine and can be hardware intensive (![FAQs](https://microsoft.github.io/AirSim/faq/)) - the system requires at least 4GB of RAM (8GB recommended) and an integrated/external GPU with atleast 4GB of VRAM. To obtain the best performance without a dedicated GPU, please use the Blocks environment provided by AirSim as this has a minimal hardware footprint.
