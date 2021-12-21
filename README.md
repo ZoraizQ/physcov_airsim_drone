@@ -1,5 +1,5 @@
 # PhysCov - Quantifying Physical Coverage for Autonomous Drones (Microsoft AirSim)
-Thorough testing of autonomous systems for UAVs before their deployment is crucial to guarantee safety and mitigate costly failures. Existing software testing coverage metrics lack interpretability and these test adequacy metrics are not effective for complex AI driven autonomous vehicles. We extend PhysCov, a new physical coverage metric for autonomous vehicles, to the domain of UAVs - to measure coverage on a Software-In-The-Loop simulation tool like Microsoft AirSim. This work is an extension of the original coverage metric proposed by Carl Hildebrandt (PhD Computer Science Student, UVA) under the supervision of Sebastian Elbaum (Professor Computer Science, UVA).
+Thorough testing of autonomous systems for UAVs before their deployment is crucial to guarantee safety and mitigate costly failures. Existing software testing coverage metrics lack interpretability and these test adequacy metrics are not effective for complex AI driven autonomous vehicles. We extend PhysCov, a new physical coverage metric for autonomous vehicles, to the domain of UAVs - to measure coverage on a Software-In-The-Loop simulation tool like Microsoft AirSim. This work is an extension of the original coverage metric proposed by Carl Hildebrandt (PhD Computer Science Student, UVA) under the supervision of Dr. Sebastian Elbaum (Professor Computer Science, UVA).
 
 Along with integration for real-time coverage measurements, we test various scenarios in AirSim using a quadrotor equipped with a LIDAR sensor under certain defined survey tasks. Based on our evaluation, we propose that gathering high coverage with PhysCov indicates testing of an adequate number of distinct behaviors for an autonomous flying system, uncovering potential failures such as collisions.
 
@@ -73,4 +73,4 @@ The script will initiate drone take-off using the pre-defined default parameters
 - Zoraiz Qureshi (zoraizq@virginia.edu) - MS Computer Science Student, University of Virginia
 - Shreyes Bhat (shreyes@virginia.edu) - MS Computer Science Student, University of Virginia
 - Carl Hildebrandt (hildebrandt.carl@outlook.com) - PhD Computer Science Student, University of Virginia
-- Sebastian Elbaum (selbaum@virginia.edu) - Professor Computer Science, University of Virginia
+- Dr. Sebastian Elbaum (selbaum@virginia.edu) - Professor Computer Science, University of Virginia
