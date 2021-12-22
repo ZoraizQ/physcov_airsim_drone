@@ -349,7 +349,7 @@ if __name__ == "__main__":
     args = sys.argv
     args.pop(0)
 
-    arg_parser = argparse.ArgumentParser("\nGENERAL: control_mode, \nPHYSCOV: t, x, g, R, srad, collision_angle_thresh, \SURVEY: boxsize, stripewidth, altitude, speed")
+    arg_parser = argparse.ArgumentParser("\nGENERAL: control_mode, \nPHYSCOV: t, x, g, R, srad, collision_angle_thresh, \nSURVEY: boxsize, stripewidth, altitude, speed")
     
     arg_parser.add_argument("--control_mode", type=str, help="record, playback, survey", default='playback')
 
