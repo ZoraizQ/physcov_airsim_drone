@@ -79,7 +79,9 @@ These can be viewed again with the -h or --help flags.
 ```
 usage:
 GENERAL: control_mode,
-PHYSCOV: t, x, g, R, srad, collision_angle_thresh, \SURVEY: boxsize, stripewidth, altitude, speed
+PHYSCOV: t, x, g, R, srad, collision_angle_thresh,
+SURVEY: boxsize, stripewidth, altitude, speed
+
        [-h] [--control_mode CONTROL_MODE] [--t T] [--x X] [--g G] [--R R]
        [--collision_angle_thresh COLLISION_ANGLE_THRESH] [--srad SRAD] [--boxsize BOXSIZE] [--stripewidth STRIPEWIDTH]
        [--altitude ALTITUDE] [--speed SPEED]
