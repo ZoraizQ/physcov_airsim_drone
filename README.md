@@ -130,6 +130,7 @@ This plays back the saved recorded path present in the repository with RSR-5, gr
 
 ## Issues?
 **AirSim not responding / Client API connection fails?** - Reset the drone (Backspace), or restart the AirSim environment.
+
 **BufferError?** - If you get a BufferError such as "Existing exports of data: object cannot be re-sized on the console" - simply reset the drone using backspace and re-run the script.
 
 ## Collaborators
