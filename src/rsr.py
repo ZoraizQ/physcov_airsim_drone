@@ -1,7 +1,4 @@
 import numpy as np
-# import matplotlib.pyplot as plt
-# from matplotlib.pyplot import figure
-# import mpl_toolkits.mplot3d
 # import open3d as o3d
 
 
@@ -9,7 +6,7 @@ def getRoundedThresholdv1(a, Minclip):
     return np.round(a / Minclip) * Minclip
 
 
-def get_rsr_signature(lidar_points_orig, DRONE_CENTER, NUM_PTS=40, GRANULARITY=2, REACH_RANGE=60, RADIUS=1, plot_lidar=False):
+def get_rsr_signature(lidar_points_orig, DRONE_CENTER, NUM_PTS=5, GRANULARITY=2, REACH_RANGE=6, RADIUS=1, plot_lidar=False):
     indices = np.arange(0, NUM_PTS, dtype=float) + 0.5
     phi = np.arccos(1 - 2*indices/NUM_PTS)
     theta = np.pi * (1 + 5**0.5) * indices

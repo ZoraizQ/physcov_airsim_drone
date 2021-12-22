@@ -5,15 +5,12 @@ import os
 import time
 import argparse
 import pprint
-from airsim.types import DrivetrainType, Vector3r
+from airsim.types import Vector3r
 import numpy as np
-from numpy.lib.function_base import angle
-from tensorboard.compat.tensorflow_stub.tensor_shape import vector 
 from matplotlib import pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import pickle
 
-from src.rsr import get_rsr_signature
+from rsr import get_rsr_signature
 
 # def visualize_pointcloud(points_3d): 
 #     import open3d as o3d
@@ -26,30 +23,44 @@ def angle_between(v1, v2): # angle between 2 unit vector
     return np.degrees(np.arccos(np.clip(np.dot(v1, v2), -1.0, 1.0)))
 
 
-class PhysCovNavigator(threading.Thread):
-    def __init__(self, args):
-        self.boxsize = args.size
+class PhyscovNavigator(threading.Thread):
+    
+    def __init__(self, args): 
+        self.control_mode = args.control_mode
+        
+        '''
+        CONFIGURABLE RSR PARAMETERS
+        '''
+        self.x = args.x # number of RSR beams / points
+        self.R = args.R
+        self.g = args.g # granularity (beam collision detection step intervals)
+        self.srad = args.srad
+        self.t = args.t
+        self.collision_angle_thresh = args.collision_angle_thresh # degrees
+        self.denom = pow(self.R//self.g, self.x)
+
+        '''
+        SURVEY PATH PARAMETERS
+        '''
+        self.boxsize = args.boxsize
         self.stripewidth = args.stripewidth
         self.altitude = args.altitude
-        self.velocity = args.speed
+        self.speed = args.speed
+
         self.client = airsim.MultirotorClient()
         self.client.confirmConnection()
         self.client.enableApiControl(True)
         self.result = None
         self.trip_time = 0
-        self.recording = False
         self.path  = []
-
-
-        self.runThread = False
         
         threading.Thread.__init__(self)
+
 
     def run(self): 
         print ("Starting thread")
         self.get_lidar_data()
         print ("Exiting thread")
-
 
 
     def execute(self):
@@ -58,10 +69,11 @@ class PhysCovNavigator(threading.Thread):
 
 
         state = self.client.getMultirotorState()
-        s = pprint.pformat(state)
-        print("getMultirotorState: %s" % s)
+        # s = pprint.pformat(state)
+        # print("getMultirotorState: %s" % s)
 
-        if not self.recording:
+
+        if not self.control_mode == 'record': # TAKEOFF NECESSARY FOR BOTH PLAYBACK AND SURVEY MODES
             landed = self.client.getMultirotorState().landed_state
             if landed == airsim.LandedState.Landed:
                 print("taking off...")
@@ -71,109 +83,93 @@ class PhysCovNavigator(threading.Thread):
             if landed == airsim.LandedState.Landed:
                 print("takeoff failed - check Unreal message log for details")
                 return
-        '''
-        # AirSim uses NED coordinates so negative axis is up.
-        x = -self.boxsize
-        z = -self.altitude
-
-        print("climbing to altitude: " + str(self.altitude))
-        self.client.moveToPositionAsync(0, 0, z, self.velocity).join()
-
-        print("flying to first corner of survey box")
-        self.client.moveToPositionAsync(x, -self.boxsize, z, self.velocity).join()
         
-        # let it settle there a bit.
-        self.client.hoverAsync().join()
-        time.sleep(2) 
 
-        # after hovering we need to re-enabled api control for next leg of the trip
-        self.client.enableApiControl(True)
+        if self.control_mode == 'survey': # SURVEY PATH WILL BE COMPUTED & USED
+            # AirSim uses NED coordinates so negative axis is up.
+            x = -self.boxsize
+            z = -self.altitude
 
-        # now compute the survey path required to fill the box 
-        path = []
-        distance = 0
-        while x < self.boxsize:
-            distance += self.boxsize 
-            path.append(airsim.Vector3r(x, self.boxsize, z))
-            x += self.stripewidth            
-            distance += self.stripewidth 
-            path.append(airsim.Vector3r(x, self.boxsize, z))
-            distance += self.boxsize 
-            path.append(airsim.Vector3r(x, -self.boxsize, z)) 
-            x += self.stripewidth  
-            distance += self.stripewidth 
-            path.append(airsim.Vector3r(x, -self.boxsize, z))
-            distance += self.boxsize 
+            print("climbing to altitude: " + str(self.altitude))
+            self.client.moveToPositionAsync(0, 0, z, self.speed).join()
+
+            print("flying to first corner of survey box")
+            self.client.moveToPositionAsync(x, -self.boxsize, z, self.speed).join()
+            
+            # let it settle there a bit.
+            self.client.hoverAsync().join()
+            time.sleep(2) 
+
+            # after hovering we need to re-enabled api control for next leg of the trip
+            self.client.enableApiControl(True)
+
+            # now compute the survey path required to fill the box 
+            self.path = []
+            distance = 0
+            while x < self.boxsize:
+                distance += self.boxsize 
+                self.path.append(airsim.Vector3r(x, self.boxsize, z))
+                x += self.stripewidth            
+                distance += self.stripewidth 
+                self.path.append(airsim.Vector3r(x, self.boxsize, z))
+                distance += self.boxsize 
+                self.path.append(airsim.Vector3r(x, -self.boxsize, z)) 
+                x += self.stripewidth  
+                distance += self.stripewidth 
+                self.path.append(airsim.Vector3r(x, -self.boxsize, z))
+                distance += self.boxsize 
+
+            print("starting survey, estimated distance is " + str(distance))
         
-        
-        # if self.runThread:
-        #     self.start()
 
-        print("starting survey, estimated distance is " + str(distance))
-        '''
-
-        if not self.recording:
+        if self.control_mode == 'playback': # PRE-RECORDED MANUAL PATH WILL BE USED
             self.path = np.load('recordedpath.npy').tolist()
             self.path = [Vector3r(-i[0], -i[1], -i[2]) for i in self.path]
-            print(self.path)
-            self.trip_time = len(self.path)
-        else:
-            self.trip_time = 500 #distance // self.velocity
-        print("estimated survey time is " + str(self.trip_time))
+            # print(self.path)
+            self.t = len(self.path)
+
+
+        print("timesteps used: " + str(self.t))
 
         
         try:
             self.start()
-            if not self.recording:
-                self.result = self.client.moveOnPathAsync(self.path, self.velocity, self.trip_time, 
-                airsim.DrivetrainType.ForwardOnly, airsim.YawMode(False,0), self.velocity + (self.velocity/2), 1) #removed join
-            #     self.result = self.client.moveOnPathAsync(self.path, self.velocity, self.trip_time, self.velocity + (self.velocity/2), 1) #removed join
-            
+            if not self.control_mode == 'record':
+                # self.result = self.client.moveOnPathAsync(self.path, self.speed, self.t, self.speed + (self.speed/2), 1) #removed join
+                self.result = self.client.moveOnPathAsync(self.path, self.speed, self.t, airsim.DrivetrainType.ForwardOnly, airsim.YawMode(False,0), self.speed + (self.speed/2), 1)
         except:
             errorType, value, traceback = sys.exc_info()
             print("moveOnPath threw exception: " + str(value))
             pass
-
         
-
         self.join()
-        
 
         print('finished getting lidar readings')
 
 
 
     def get_lidar_data(self):
-        N = 0 # number of unique RSR signatures
-        x = 5 # number of RSR beams / points
-        drone_center_list = []
-        
-        reach_range = 6
-        g = 2 # granularity (beam collision detection step intervals)
-        radius = 1
-        physcov = 0
-        denom = pow(reach_range//g, x)  # big number otherwise, so for now x/10
-        unique_rsr_signatures = []
-        # timesteps = self.trip_time
-        timesteps = 600
-        collision_angle_thresh = 20 # degrees
+        # self.t = self.trip_time
 
-        physcovs = []
         # gap = 2147483647-denom
+        physcov = 0
+        N = 0 # number of unique RSR signatures
+        physcovs = []
+        drone_center_list = []
         unique_coll_vectors = []
         unique_coll_timesteps = []
+        unique_rsr_signatures = []
 
-        print(f'denom = {denom}')
+        print(f'denom = {self.denom}')
 
         print('Path:', len(self.path))
-        collision_happened_before = False
         start = time.time()
         p = 0
-        for i in range(0, timesteps): #change to timesteps
+        for i in range(0, self.t): #change to timesteps
             # you have to edit Documents/AirSim/settings.json as follows https://microsoft.github.io/AirSim/lidar/
             lidarData = self.client.getLidarData(lidar_name="LidarSensor1", vehicle_name= "Drone1")
 
-            physcov = N * 100 / denom
+            physcov = N * 100 / self.denom
             physcovs.append(physcov)
 
             collision_happened = False
@@ -191,8 +187,8 @@ class PhysCovNavigator(threading.Thread):
                 drone_center = lidarData.pose.position.to_numpy_array() * -1
                 drone_center_list.append(drone_center)  
                 
-                new_rsr = get_rsr_signature(lidar_points_orig=points, DRONE_CENTER=drone_center, NUM_PTS=x, 
-                                            GRANULARITY=g, REACH_RANGE=reach_range, RADIUS=radius, plot_lidar=False)
+                new_rsr = get_rsr_signature(lidar_points_orig=points, DRONE_CENTER=drone_center, NUM_PTS=self.x, 
+                                            GRANULARITY=self.g, REACH_RANGE=self.R, RADIUS=self.srad, plot_lidar=False)
 
                 is_unique = True
                 for signature in unique_rsr_signatures:
@@ -203,7 +199,9 @@ class PhysCovNavigator(threading.Thread):
                     unique_rsr_signatures.append(new_rsr)
                     N += 1    
                     # print(N, g_x)
-                    print("Updated Physcov:","{:e}".format(physcov),"%")
+                    log = "Updated Physcov: {:e}".format(physcov) + " %"
+                    print(log)
+                    self.client.simPrintLogMessage(log)
                     print(new_rsr)
 
                 # CHECK COLLISIONS
@@ -226,7 +224,7 @@ class PhysCovNavigator(threading.Thread):
                         for prev_coll_vector in unique_coll_vectors:
                             angle_between_prev =  angle_between(new_coll_vector, prev_coll_vector) 
                             # print('angle:', angle_between_prev)
-                            if angle_between_prev < collision_angle_thresh: # then they are too close, not unique
+                            if angle_between_prev < self.collision_angle_thresh: # then they are too close, not unique
                                 is_unique = False
                                 break
                         
@@ -240,39 +238,47 @@ class PhysCovNavigator(threading.Thread):
             if not collision_happened: # since unique collision checks already take some time
                 time.sleep(0.2)
 
-            if collision_happened:
-                collision_happened_before = True
             
             p += 1
             # time.sleep(5)
-
             # self.write_lidarData_to_disk(points, i)
-        elapsed_time = (time.time() - start)
+
 
         print('========\nSIMULATION COMPLETE\n========')
-        print(f'Timesteps: {timesteps}')
+        elapsed_time = (time.time() - start)
+        print(f'Timesteps: {self.t}')
         print(f'Elapsed time: {elapsed_time} s')
-        print(f'Average timestep: {elapsed_time / timesteps} s')
+        print(f'Average timestep: {elapsed_time / self.t} s')
 
 
+        if not os.path.exists('results'): 
+            os.makedirs('results')
+        
         ax = plt.gca()
 
-        physcov_data = {'physcovs' : physcovs, 'g' : g, 'reach_range': reach_range, 'x': x, 'N': N, 'timesteps' : timesteps, 'radius': radius, 'unique_rsr_signatures': unique_rsr_signatures, 'unique_coll_vectors': unique_coll_vectors, 'unique_coll_timesteps': unique_coll_timesteps}
+        physcov_data = {
+            'physcovs' : physcovs, 
+            'g' : self.g, 'R': self.R, 'x': self.x, 'srad': self.srad,
+            'N': N, 
+            'timesteps': self.t,  
+            'unique_rsr_signatures': unique_rsr_signatures, 
+            'unique_coll_vectors': unique_coll_vectors, 
+            'unique_coll_timesteps': unique_coll_timesteps
+        }
         
-        file_params_string = 'g-'+str(g)+'_x-'+str(x)+'_N-'+str(N)+'_reach-'+str(reach_range)+'_rad-'+str(radius)
+        file_params_string = 'g-'+str(self.g)+'_x-'+str(self.x)+'_N-'+str(N)+'_reach-'+str(self.R)+'_rad-'+str(self.srad)
 
-        plt.plot(np.arange(timesteps), physcovs, label = 'RSR-'+str(x))
+        plt.plot(np.arange(self.t), physcovs, label = 'RSR-'+str(self.x))
         plt.xlabel('timesteps')
         plt.ylabel('physcov %')
         
-        # ax.text(x = 0.97, y = 0.68, s  = '100', fontsize = 12)
-        plt.text(x = 0.97, y = 0.95, s = ('g: '+str(g)), fontsize=15, ha='right', fontweight='book', transform=ax.transAxes)
+        plt.text(x = 0.97, y = 0.95, s = ('g: '+str(self.g)), fontsize=15, ha='right', fontweight='book', transform=ax.transAxes)
         plt.text(x = 0.97, y = 0.88, s  = ('N: '+str(N)), fontsize=15, ha='right', fontweight='book', transform=ax.transAxes)
         
-        plt.text(x = 0.97, y = 0.81, s = 'reach_range: '+str(reach_range), fontsize=15, ha='right', fontweight='book', transform=ax.transAxes)
-        plt.text(x  = 0.97, y = 0.74, s = 'radius: '+str(radius), fontsize=15, ha='right', fontweight='book', transform=ax.transAxes)
+        plt.text(x = 0.97, y = 0.81, s = 'R: '+str(self.R), fontsize=15, ha='right', fontweight='book', transform=ax.transAxes)
+        plt.text(x  = 0.97, y = 0.74, s = 'srad: '+str(self.srad), fontsize=15, ha='right', fontweight='book', transform=ax.transAxes)
         plt.legend()
-        plt.savefig('physcov_'+file_params_string+'.png')
+        plt.savefig(os.path.join('results','physcov_'+file_params_string+'.png'))
         plt.show()
 
         if len(unique_coll_timesteps) != 0:
@@ -280,8 +286,8 @@ class PhysCovNavigator(threading.Thread):
             plt.plot(unique_coll_timesteps, np.arange(1, len(unique_coll_timesteps)+1), 'r')
             plt.xlabel('timesteps')
             plt.ylabel('# unique collisions')
-            plt.xlim([0, timesteps]) # 0-100
-            plt.savefig('num_unique_coll_'+file_params_string+'.png')
+            plt.xlim([0, self.t]) # 0-100
+            plt.savefig(os.path.join('results','num_unique_coll_'+file_params_string+'.png'))
             plt.show()
 
             U, V, W = zip(*unique_coll_vectors)
@@ -296,16 +302,17 @@ class PhysCovNavigator(threading.Thread):
             ax.set_ylim([-1,1])
             ax.set_zlim([-1,1])
             plt.title('Unique Collision Vectors Set')
-            plt.savefig('uniquecoll_'+file_params_string+'.png')
+            plt.savefig(os.path.join('results','uniquecoll_'+file_params_string+'.png'))
             plt.show()
         else:
             print('No collisions occurred.')
 
-        with open('physcov_'+file_params_string+'.pkl', 'wb') as f:
+        with open(os.path.join('results','physcov_'+file_params_string+'.pkl'), 'wb') as f:
             pickle.dump(physcov_data, f)
     
         drone_center_list = np.array(drone_center_list)
-        if (self.recording):
+
+        if self.control_mode == 'record':
             np.save('recordedpath.npy', drone_center_list)
 
         print("Final Physcov:","{:e}".format(physcov),"%")
@@ -320,22 +327,20 @@ class PhysCovNavigator(threading.Thread):
        
         return points
 
-    def write_lidarData_to_disk(self, points, i):
-        save_path = os.path.join(os.curdir, 'LidarOutputs', 'lidar_t'+str(i)+'.npy')
-        print(save_path)
 
+
+    def write_lidarData_to_disk(self, points, i):
+        save_path = os.path.join(os.curdir, 'evaluation', 'LidarOutputs', 'lidar_t'+str(i)+'.npy')
+        print(save_path)
         with open(save_path, 'wb') as f: # save points for all these timestamps
             np.save(f, points)
 
 
+
     def stop(self):
-
         airsim.wait_key('Press any key to reset to original state')
-
-
         self.client.armDisarm(False)
         self.client.reset()
-
         self.client.enableApiControl(False)
         print("Done!\n")
 
@@ -344,14 +349,25 @@ if __name__ == "__main__":
     args = sys.argv
     args.pop(0)
 
-    arg_parser = argparse.ArgumentParser("Usage: survey boxsize stripewidth altitude")
-    arg_parser.add_argument("--size", type=float, help="size of the box to survey", default=50)
+    arg_parser = argparse.ArgumentParser("\nGENERAL: control_mode, \nPHYSCOV: t, x, g, R, srad, collision_angle_thresh, \SURVEY: boxsize, stripewidth, altitude, speed")
+    
+    arg_parser.add_argument("--control_mode", type=str, help="record, playback, survey", default='playback')
+
+    arg_parser.add_argument("--t", type=int, help="timesteps for the simulation (# RSR signatures)", default=500)
+    arg_parser.add_argument("--x", type=int, help="number of equidistant beams / rays", default=5)
+    arg_parser.add_argument("--g", type=int, help="granularity (for beam length rounding) (m)", default=2)
+    arg_parser.add_argument("--R", type=int, help="spherical reachable range radius of the drone (assume same as speed) (m)", default=6)
+    arg_parser.add_argument("--collision_angle_thresh", type=float, help="collision angle threshold to mark a unique collision", default=20)
+    arg_parser.add_argument("--srad", type=float, help="radius of sphere for sphere-casting for lidar truncation (m)", default=1)
+    
+    arg_parser.add_argument("--boxsize", type=float, help="size of the box to survey", default=50)
     arg_parser.add_argument("--stripewidth", type=float, help="stripe width of survey (in meters)", default=10)
     arg_parser.add_argument("--altitude", type=float, help="altitude of survey (in positive meters)", default=25)
     arg_parser.add_argument("--speed", type=float, help="speed of survey (in meters/second)", default=6)
+
     args = arg_parser.parse_args(args)
 
-    nav = PhysCovNavigator(args)
+    nav = PhyscovNavigator(args)
     try:
         nav.execute()
     finally:
